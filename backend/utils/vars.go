@@ -28,6 +28,7 @@ var Version string // Set via -X flag during build
 //   - "auto"   : try RFC5424 first, then RFC3164 (default)
 //   - "rfc5424": only parse as RFC5424
 //   - "rfc3164": only parse as RFC3164
+//
 // Any other value falls back to "auto".
 var logFormat string
 var logFormatMutex sync.RWMutex
