@@ -105,6 +105,32 @@ func TestParseRFC3164ToLogEntry_YearBoundary(t *testing.T) {
 	}
 }
 
+func TestParseRFC3164_WithISOTimestamp(t *testing.T) {
+	line := "<34>2026-01-30T17:14:31+09:00 mymachine su: 'su root' failed for lonvick on /dev/pts/8"
+	entry, err := ParseRFC3164ToLogEntry(line)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if entry.Facility != 4 || entry.Severity != 2 { // 34 / 8 = 4, 34 % 8 = 2
+		t.Errorf("facility/severity mismatch: got (%d,%d)", entry.Facility, entry.Severity)
+	}
+	if entry.Hostname != "mymachine" {
+		t.Errorf("hostname: got %q", entry.Hostname)
+	}
+	if entry.AppName != "su" {
+		t.Errorf("appname: got %q", entry.AppName)
+	}
+	if entry.ProcID != "-" {
+		t.Errorf("procid: got %q", entry.ProcID)
+	}
+	if entry.Message != "'su root' failed for lonvick on /dev/pts/8" {
+		t.Errorf("message: got %q", entry.Message)
+	}
+	if entry.Timestamp.IsZero() {
+		t.Error("timestamp should not be zero")
+	}
+}
+
 func TestParseRFC3164ToLogEntry_InvalidPriority(t *testing.T) {
 	// Test priority out of range
 	testCases := []struct {

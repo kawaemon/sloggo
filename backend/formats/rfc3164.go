@@ -11,7 +11,7 @@ import (
 
 var (
 	// Example: <34>Oct 11 22:14:15 mymachine su[123]: 'su root' failed
-	rfc3164Regex = regexp.MustCompile(`^<(?P<pri>\d{1,3})>(?P<ts>[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+(?P<host>\S+)\s+(?P<tag>[A-Za-z0-9_.\-\/]+)(?:\[(?P<pid>[^\]]+)\])?:\s*(?P<msg>[\s\S]*)$`)
+	rfc3164Regex = regexp.MustCompile(`^<(?P<pri>\d{1,3})>(?P<ts>([A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})|(\d{4}(-\d{2}(-\d{2}(T\d{2}:\d{2}(:\d{2})?(\.\d+)?(([+-]\d{2}:\d{2})|Z)?)?)?)?))\s+(?P<host>\S+)\s+(?P<tag>[A-Za-z0-9_.\-\/]+)(?:\[(?P<pid>[^\]]+)\])?:\s*(?P<msg>[\s\S]*)$`)
 )
 
 // ParseRFC3164ToLogEntry parses an RFC3164 (BSD) syslog line into a LogEntry
@@ -55,7 +55,10 @@ func ParseRFC3164ToLogEntry(line string) (*models.LogEntry, error) {
 	// Jan _2 15:04:05 handles single-digit days
 	tsParsed, err := time.ParseInLocation("Jan _2 15:04:05", tsStr, now.Location())
 	if err != nil {
-		return nil, errors.New("failed to parse timestamp: " + err.Error())
+		tsParsed, err = time.ParseInLocation(time.RFC3339, tsStr, now.Location())
+		if err != nil {
+			return nil, errors.New("failed to parse timestamp: " + err.Error())
+		}
 	}
 
 	// Infer year: start with current year
